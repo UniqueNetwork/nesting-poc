@@ -85,7 +85,6 @@ app
   .use(router.routes())
   .use(router.allowedMethods())
 
-app.listen(config.port, config.host, () => {
-  console.log(`Server listening on ${config.host}:${config.port}`)
-  console.log(`http${['localhost', '127.0.0.1'].includes(config.host) ? '' : 's'}://${config.host}:${config.port}`)
+app.listen(config.port, () => {
+  console.log(`Server listening on ${config.port}`)
 })

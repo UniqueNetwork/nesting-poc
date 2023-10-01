@@ -15,7 +15,6 @@ export const getConfig = (): Config => {
   return {
     imagesDir: process.env.IMAGES_DIR,
     mnemonic: process.env.MNEMONIC || '',
-    host: process.env.HOST || 'localhost',
     port: !isNaN(port) ? port : 3000,
   }
 }
