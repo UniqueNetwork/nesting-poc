@@ -142,8 +142,9 @@ export const composeImage = async (
     avatar == KnownAvatar.Mutant ? tokenArray : tokenArray.map(x => x.imageUrl),
   );
 
-  let mergeImages = async (imageArray: MutantTokenComponents[]): Promise<Jimp> => {
+  let mergeImages = async (imageArray: MutantTokenComponents[]) => {
     const image = await Jimp.read(imageArray[0].imageUrl);
+
     for (const {imageUrl, mutators} of imageArray.slice(1)) {
       const childImage = await Jimp.read(imageUrl);
 
@@ -156,18 +157,15 @@ export const composeImage = async (
     
     // Mutate the complete image if there are any mutators on the parent token
     await mutateImage(image, imageArray[0].mutators)
+
     return image;
   }
 
-  return new Promise<string>((resolve, reject) => {
-    mergeImages(tokenArray).then((image) => {
-      if (!image) throw new Error('Image could not be created.')
-      image.write(outputFilePath)
+  const mergedJimp = await mergeImages(tokenArray);
+  if (!mergedJimp) throw new Error('Image could not be created.');
 
-      console.log(`Images were merged. The output is ${outputFilePath}`)
-      resolve(outputFilePath)
-    }).catch((err) => {
-      reject(err)
-    })
-  })
+  await mergedJimp.writeAsync(outputFilePath);
+  console.log(`Images were merged. The output is ${outputFilePath}`)
+
+  return outputFilePath;
 }

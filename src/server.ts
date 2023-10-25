@@ -58,7 +58,9 @@ router.get(`/:avatar/:network/:collectionId/:tokenId`, async (ctx) => {
   try {
     // Check if the image is cached
     // If not, render it and save it
-    if (!lastRenderTimes[path] || Date.now() - lastRenderTimes[path] > CACHE_TIME) {
+
+    const lastRenderAt = lastRenderTimes[path] || 0;
+    if (!lastRenderAt || Date.now() - lastRenderAt > CACHE_TIME) {
       // Initialize SDK
       const sdk = SDKFactories[network as keyof typeof SDKFactories]()
 
@@ -67,12 +69,23 @@ router.get(`/:avatar/:network/:collectionId/:tokenId`, async (ctx) => {
       // Compose and save the image from those of all tokens in the bundle
       await composeImage(tokenArray, avatar as KnownAvatar, path)
       lastRenderTimes[path] = Date.now()
+
+      ctx.status = 201
+    } else {
+      ctx.status = 200
     }
+
     console.log(`Serving ${path}...`)
 
-    const stream = fs.createReadStream(path)
     ctx.response.set('content-type', 'image/png')
-    ctx.body = stream
+
+    const stream = fs.createReadStream(path)
+
+    stream.pipe(ctx.res)
+
+    return new Promise((resolve, reject) => {
+      ctx.res.on('end', () => resolve())
+    })
   } catch (err: any) {
     console.error(err)
     ctx.status = 500
